@@ -379,29 +379,84 @@ class WidgetsHTMLDecoder {
   }
 
   ///parse html data and convert to table row
+  // Future<TableRow> _parsetableData(
+  //   dom.Element element,
+  //   TextStyle baseTextStyle,
+  // ) async {
+  //   final List<Widget> nodes = [];
+
+  //   ///iterate over <tr>children
+  //   for (final data in element.children) {
+  //     if (data.nodes.isEmpty) {
+  //       ///if single <th> or<td> tag found
+  //       final node = paragraphNode(text: data.text);
+
+  //       nodes.add(node);
+  //     } else {
+  //       ///if nested <p><br> in <tag> found
+  //       final newnodes = await _parseTableSpecialNodes(data, baseTextStyle);
+
+  //       nodes.addAll(newnodes);
+  //     }
+  //   }
+
+  //   ///returns the tale row
+  //   return TableRow(
+  //       decoration: BoxDecoration(border: Border.all(color: PdfColors.black)),
+  //       children: nodes);
+  // }
+
   Future<TableRow> _parsetableData(
     dom.Element element,
     TextStyle baseTextStyle,
   ) async {
     final List<Widget> nodes = [];
 
-    ///iterate over <tr>children
     for (final data in element.children) {
-      if (data.nodes.isEmpty) {
-        ///if single <th> or<td> tag found
-        final node = paragraphNode(text: data.text);
+      TextStyle cellStyle = baseTextStyle;
+      TextAlign alignment = TextAlign.left;
 
-        nodes.add(node);
-      } else {
-        ///if nested <p><br> in <tag> found
-        final newnodes = await _parseTableSpecialNodes(data, baseTextStyle);
-
-        nodes.addAll(newnodes);
+      // Check if this is a table header
+      if (data.localName == 'th') {
+        cellStyle = baseTextStyle.copyWith(
+          fontWeight: FontWeight.bold,
+          color: PdfColors.blue,
+        );
+        alignment = TextAlign.center;
       }
+
+      Widget node;
+      if (data.nodes.isEmpty) {
+        // Simple text in <td> or <th>
+        node = Padding(
+          padding: const EdgeInsets.all(8), // add padding to all cells
+          child: Text(
+            data.text,
+            style: cellStyle,
+            textAlign: alignment,
+          ),
+        );
+      } else {
+        // Nested nodes
+        final newnodes = await _parseTableSpecialNodes(data, baseTextStyle);
+        node = Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: alignment == TextAlign.center ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+            children: newnodes.toList(),
+          ),
+        );
+      }
+
+      nodes.add(node);
     }
 
-    ///returns the tale row
-    return TableRow(decoration: BoxDecoration(border: Border.all(color: PdfColors.black)), children: nodes);
+    return TableRow(
+      decoration: BoxDecoration(
+        border: Border.all(color: PdfColors.black),
+      ),
+      children: nodes,
+    );
   }
 
   ///parse the nodes and handle theem accordingly
@@ -744,23 +799,43 @@ class WidgetsHTMLDecoder {
       style = style.copyWith(decoration: _assignTextDecorations(style, textDecorationStr).decoration);
     }
 
-    ///apply background color on text
-    final backgroundColorStr = cssMap["background-color"];
-    final backgroundColor = backgroundColorStr == null
+    final textColorStr = cssMap["color"];
+    final textColor = textColorStr == null
         ? null
-        : isHex(backgroundColorStr)
-            ? ColorExtension.hexToPdfColor(backgroundColorStr)
-            : ColorExtension.tryFromRgbaString(backgroundColorStr);
-    if (backgroundColor != null) {
-      style = style.copyWith(color: backgroundColor);
+        : isHex(textColorStr)
+            ? ColorExtension.hexToPdfColor(textColorStr)
+            : ColorExtension.tryFromRgbaString(textColorStr);
+    if (textColor != null) {
+      style = style.copyWith(color: textColor); // text color
     }
 
-    ///apply background color on text
-    final colorstr = cssMap["color"];
-    final color = colorstr == null ? null : ColorExtension.tryFromRgbaString(colorstr);
-    if (color != null) {
-      style = style.copyWith(color: color);
+    /// apply background color
+    final backgroundColorStr = cssMap["background-color"];
+    final backgroundColor = backgroundColorStr != null
+        ? (isHex(backgroundColorStr) ? ColorExtension.hexToPdfColor(backgroundColorStr) : ColorExtension.tryFromRgbaString(backgroundColorStr))
+        : null;
+    if (backgroundColor != null) {
+      style = style.copyWith(color: backgroundColor); // background!
     }
+
+//old code
+    // ///apply background color on text
+    // final backgroundColorStr = cssMap["background-color"];
+    // final backgroundColor = backgroundColorStr == null
+    //     ? null
+    //     : isHex(backgroundColorStr)
+    //         ? ColorExtension.hexToPdfColor(backgroundColorStr)
+    //         : ColorExtension.tryFromRgbaString(backgroundColorStr);
+    // if (backgroundColor != null) {
+    //   style = style.copyWith(color: backgroundColor);
+    // }
+
+    // ///apply background color on text
+    // final colorstr = cssMap["color"];
+    // final color = colorstr == null ? null : ColorExtension.tryFromRgbaString(colorstr);
+    // if (color != null) {
+    //   style = style.copyWith(color: color);
+    // }
 
     ///apply italic tag
 
