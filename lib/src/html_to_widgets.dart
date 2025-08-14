@@ -815,27 +815,8 @@ class WidgetsHTMLDecoder {
         ? (isHex(backgroundColorStr) ? ColorExtension.hexToPdfColor(backgroundColorStr) : ColorExtension.tryFromRgbaString(backgroundColorStr))
         : null;
     if (backgroundColor != null) {
-      style = style.copyWith(color: backgroundColor); // background!
+      style = style.copyWith(background: BoxDecoration(color: backgroundColor));
     }
-
-//old code
-    // ///apply background color on text
-    // final backgroundColorStr = cssMap["background-color"];
-    // final backgroundColor = backgroundColorStr == null
-    //     ? null
-    //     : isHex(backgroundColorStr)
-    //         ? ColorExtension.hexToPdfColor(backgroundColorStr)
-    //         : ColorExtension.tryFromRgbaString(backgroundColorStr);
-    // if (backgroundColor != null) {
-    //   style = style.copyWith(color: backgroundColor);
-    // }
-
-    // ///apply background color on text
-    // final colorstr = cssMap["color"];
-    // final color = colorstr == null ? null : ColorExtension.tryFromRgbaString(colorstr);
-    // if (color != null) {
-    //   style = style.copyWith(color: color);
-    // }
 
     ///apply italic tag
 
